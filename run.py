@@ -73,7 +73,7 @@ def allchapters(web, headers, domain):
     print(chapters)
     #title_tag = soup.find("title")
     #title = title_tag.string
-    h1_tag = soup.find("h1", itemprop_="name")
+    h1_tag = soup.find("h1", attrs={'itemprop': 'name'})
     # Trích xuất văn bản từ thẻ h1
     if h1_tag:
         #h1_text = h1_tag.text.replace("\n","").strip()
