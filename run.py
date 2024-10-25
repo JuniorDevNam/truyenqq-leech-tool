@@ -64,80 +64,25 @@ def onechapter(web, headers, output_dir):
 def allchapters(web, headers, domain):
     res = requests.get(web,headers=headers)
     html_content = res.text
-    soup = BeautifulSoup(html_content, 'html.parser')\
+    soup = BeautifulSoup(html_content, 'html.parser')
     chapters = []
-    
-def allchapters_selenium(web, headers, domain):
-    while True:
-        try:
-            requests.get(web,headers=headers)
-            break
-        except requests.exceptions.SSLError:
-            try:
-                requests.get(f'https://webcache.googleusercontent.com/search?q=cache:{web}',headers=headers)
-            except requests.exceptions.SSLError:
-                print("Giải mã trang web bị lỗi. Đang cố gắng thử lại...")
-
-    from selenium import webdriver
-    from selenium.webdriver.common.keys import Keys
-    from selenium.webdriver.chrome.service import Service
-    from selenium.webdriver.common.by import By
-    import time
-
-    # Khởi tạo trình duyệt
-    options = webdriver.ChromeOptions()
-    #options.add_argument('--headless')
-    #options.add_argument('--no-sandbox')
-    # Thêm 1 số option cho chrome như kích thước windows, chế độ ẩn danh, ...
-    #options.add_argument('--disable-gpu')
-    #options.add_argument('--disable-dev-shm-usage')
-    options.add_argument("--incognito")
-    #options.add_argument("--window-size=1920x1080")
-    chromedrv = join(sys.path[0], "chromedriver.exe")
-    service = Service(executable_path=chromedrv)
-    driver = webdriver.Chrome(service=service,options=options)
-    # Mở trang web
-    driver.get(web)
-    time.sleep(10)
-    # Scroll down to the bottom of the page
-    while True:
-        # Scroll down using the END key
-        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.PAGE_DOWN)
-        time.sleep(1)  # Add a delay to allow content to load (adjust as needed)
-    # Check if we've reached the bottom of the page
-        if driver.execute_script("return window.scrollY + window.innerHeight >= document.body.scrollHeight"):
-            break
-
-    # Get the HTML source of the entire page
-    html_source = driver.page_source
-
-    # Close the browser
-    driver.quit()
-    soup = BeautifulSoup(html_source, 'html.parser')
-
-    #debug
-    #with open(debug_html, 'w', encoding='utf8') as f:
-    #    f.write(str(soup))
-    # Find all <a> tags within the specified <div>
-    links = []
-    #for item in soup.find_all("div", class_="page-info"):
-    #for item in soup.find_all("div", class_=lambda x: x and 'watch-online' in x):
-    for item in soup.find_all("p", id="inner-listshowchapter"):
-        for link in item.find_all("a"):
-            links.append(link.get("href"))
-    print(links)
-    links.pop(1)
-    #print(links)
+    for x in soup.find_all("div", class_="works-chapter-item"):
+        for y in x.find_all("a"):
+            chapters.append(f'{domain}{y.get("href")}')
+    chapters = chapters[::-1]
+    print(chapters)
     #title_tag = soup.find("title")
     #title = title_tag.string
-    title = web.split("/")[-1]
-    print(title)
+    h1_tag = soup.find("h1", itemprop_="name")
+    # Trích xuất văn bản từ thẻ h1
+    if h1_tag:
+        #h1_text = h1_tag.text.replace("\n","").strip()
+        #h1_text = re.sub(r'\s+', ' ', h1_text).strip()
+        title = re.sub(r'\s+', ' ', h1_tag.text).strip()
+        print(title)
     output_dir = join(sys.path[0],"downloads",title)
-    for link in links:
-        chap = f'{domain}{link}'
-        print(chap)
-        onechapter(chap, headers, output_dir)
-
+    for link in chapters:
+        onechapter(link, headers, output_dir)
 
 web = str(input("Nhập đường link của truyện: "))
 print("**!** Tool còn nhiều hạn chế, và mình sẽ luôn cố gắng cập nhật để bắt kịp với trang web.")
