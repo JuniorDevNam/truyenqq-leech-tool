@@ -10,6 +10,8 @@ import re
 debug_html = join(sys.path[0],"debug.html")
 debug_html_ch = join(sys.path[0],"debug_ch.html")
 
+start_time = time.time()
+
 #https://stackoverflow.com/questions/14587728/what-does-this-error-in-beautiful-soup-means
 user_agent_list = [
    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36",
@@ -61,7 +63,7 @@ def onechapter(web, headers, output_dir):
     time.sleep(1)
     print("Xong.")
 
-def allchapters(web, headers, domain):
+def allchapters(web, headers, domain, parts_only=False, part_start = int(), part_end = int()):
     res = requests.get(web,headers=headers)
     html_content = res.text
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -81,8 +83,13 @@ def allchapters(web, headers, domain):
         title = re.sub(r'\s+', ' ', h1_tag.text).strip()
         print(title)
     output_dir = join(sys.path[0],"downloads",title)
-    for link in chapters:
-        onechapter(link, headers, output_dir)
+    if parts_only:
+        for x in range(part_start, part_end):
+            link = chapters[x-1]
+            onechapter(link, headers, output_dir)
+    else:
+        for link in chapters:
+            onechapter(link, headers, output_dir)
 
 web = str(input("Nhập đường link của truyện: "))
 print("**!** Tool còn nhiều hạn chế, và mình sẽ luôn cố gắng cập nhật để bắt kịp với trang web.")
@@ -107,5 +114,28 @@ if "chap" in web:
     output_dir = ''
     onechapter(web, headers, output_dir)
 else:
-    print("Có vẻ như đây là đường link của cả một truyện. Tiến hành tải tất cả chương mà truyện hiện có...")
-    allchapters(web, headers, domain)
+    print("Có vẻ như đây là đường link của cả một truyện.")
+    print("Bạn muốn tải tất cả các chương truyện hiện có hay chỉ một phần?")
+    choose = input("(T) Toàn Bộ - (M) Một Phần: ")
+    if choose == "T":
+        print("Bạn đã chọn tải toàn bộ các chương truyện.")
+        print("Tiến hành tải tất cả chương mà truyện hiện có...")
+        allchapters(web, headers, domain)
+    elif choose == "M":
+        print("Bạn đã chọn tải một phần của truyện.")
+        print("Xin hãy nhập phần các chương bạn muốn tải:")
+        print("""Ví dụ:
+                Đầu: 60
+                Cuối: 100
+                Vậy chương trình sẽ tiến hành tải các chương từ 60 đến 100.
+        """)
+        part_start = int(input("Đầu: "))
+        part_end = int(input("Cuối: "))
+        print("Tiến hành tải tất cả chương trong phần được chỉ định...")
+        allchapters(web, headers, domain,parts_only=True,part_start=part_start,part_end=part_end)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Thời gian chạy: {elapsed_time} giây")
+print("Tất cả đã hoàn thành!")
+input("Nhấn Enter để tiếp tục...")
