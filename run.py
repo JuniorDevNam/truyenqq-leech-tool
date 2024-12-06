@@ -49,10 +49,13 @@ def onechapter(web, headers, output_dir):
     #title_tag = soup.find('title')
     #title = title_tag.string.replace(":"," -")
     #title = web.split("/")[-1]
+
     if output_dir == '':
         folder = join(sys.path[0],"downloads",h1_text)
     else:
         folder = join(output_dir,h1_text)
+    
+    
     makedirs(folder, exist_ok=True)
     for index, link in enumerate(img_links):
         print(link)
@@ -63,7 +66,7 @@ def onechapter(web, headers, output_dir):
     time.sleep(1)
     print("Xong.")
 
-def allchapters(web, headers, domain, parts_only=False, part_start = int(), part_end = int()):
+def allchapters(web, headers, domain, output_dir, parts_only=False, part_start = int(), part_end = int()):
     res = requests.get(web,headers=headers)
     html_content = res.text
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -82,14 +85,21 @@ def allchapters(web, headers, domain, parts_only=False, part_start = int(), part
         #h1_text = re.sub(r'\s+', ' ', h1_text).strip()
         title = re.sub(r'\s+', ' ', h1_tag.text).strip()
         print(title)
-    output_dir = join(sys.path[0],"downloads",title)
+
+    #
+    if output_dir == '':
+        folder = join(sys.path[0],"downloads",title)
+    else:
+        folder = join(output_dir,title)
+
+    
     if parts_only:
         for x in range(part_start, part_end):
             link = chapters[x-1]
-            onechapter(link, headers, output_dir)
+            onechapter(link, headers, folder)
     else:
         for link in chapters:
-            onechapter(link, headers, output_dir)
+            onechapter(link, headers, folder)
 
 web = str(input("Nhập đường link của truyện: "))
 print("**!** Tool còn nhiều hạn chế, và mình sẽ luôn cố gắng cập nhật để bắt kịp với trang web.")
@@ -111,16 +121,17 @@ headers = {
     }
 if "chap" in web:
     print("Có vẻ đây là link của 1 chap đơn. Tiến hành tải...")
-    output_dir = ''
+    output_dir = 'downloads'
     onechapter(web, headers, output_dir)
 else:
+    output_dir = 'downloads'
     print("Có vẻ như đây là đường link của cả một truyện.")
     print("Bạn muốn tải tất cả các chương truyện hiện có hay chỉ một phần?")
     choose = input("(T) Toàn Bộ - (M) Một Phần: ")
     if choose == "T":
         print("Bạn đã chọn tải toàn bộ các chương truyện.")
         print("Tiến hành tải tất cả chương mà truyện hiện có...")
-        allchapters(web, headers, domain)
+        allchapters(web, headers, domain, output_dir)
     elif choose == "M":
         print("Bạn đã chọn tải một phần của truyện.")
         print("Xin hãy nhập phần các chương bạn muốn tải:")
@@ -132,7 +143,7 @@ else:
         part_start = int(input("Đầu: "))
         part_end = int(input("Cuối: "))
         print("Tiến hành tải tất cả chương trong phần được chỉ định...")
-        allchapters(web, headers, domain,parts_only=True,part_start=part_start,part_end=part_end)
+        allchapters(web, headers, domain, output_dir, parts_only=True,part_start=part_start,part_end=part_end)
 
 end_time = time.time()
 elapsed_time = end_time - start_time
