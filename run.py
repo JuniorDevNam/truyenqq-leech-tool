@@ -55,7 +55,7 @@ def onechapter(web, headers, output_dir):
     else:
         folder = join(output_dir,h1_text)
     
-    
+    folder = folder.replace("?","")
     makedirs(folder, exist_ok=True)
     for index, link in enumerate(img_links):
         print(link)
@@ -85,8 +85,7 @@ def allchapters(web, headers, domain, output_dir, parts_only=False, part_start =
         #h1_text = re.sub(r'\s+', ' ', h1_text).strip()
         title = re.sub(r'\s+', ' ', h1_tag.text).strip()
         print(title)
-
-    #
+    title = title.replace("?","")
     if output_dir == '':
         folder = join(sys.path[0],"downloads",title)
     else:
