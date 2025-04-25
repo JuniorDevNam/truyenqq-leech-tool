@@ -23,6 +23,9 @@ user_agent_list = [
 ]
 
 
+def sanitize_filename_woquestionmark(filename):
+    return re.sub(r'[\\/*:"<>|]', "", filename)
+
 def onechapter(web, headers, output_dir):
     res = requests.get(web,headers=headers)
     html_content = res.text
@@ -30,6 +33,7 @@ def onechapter(web, headers, output_dir):
     #debug
     #with open(debug_html_ch, 'w', encoding='utf8') as f:
     #    f.write(str(soup))
+
     # Tìm thẻ h1 có class
     h1_tag = soup.find("h1", class_="detail-title txt-primary")
 
@@ -39,12 +43,17 @@ def onechapter(web, headers, output_dir):
         #h1_text = re.sub(r'\s+', ' ', h1_text).strip()
         h1_text = re.sub(r'\s+', ' ', h1_tag.text).strip()
         print(h1_text)
+        h1_text = sanitize_filename_woquestionmark(h1_text)
+
+
+    #nguồn ảnh    
     img_links = []
     for x in soup.find_all("div", class_="page-chapter"):#, id="image"):
         for y in x.find_all("img"):
             img_links.append(y.get("data-original"))
+
     #debug
-    print(img_links)
+    #print(img_links)
     #parts = web.split("/")
     #title_tag = soup.find('title')
     #title = title_tag.string.replace(":"," -")
@@ -54,9 +63,18 @@ def onechapter(web, headers, output_dir):
         folder = join(sys.path[0],"downloads",h1_text)
     else:
         folder = join(output_dir,h1_text)
-    
-    folder = folder.replace("?","")
+
+    #loại ký tự "?"    
+    if " ?" in folder:
+        folder = folder.replace(" ?","")
+    else:
+        folder = folder.replace("?","")
+    print(folder)
+
+    #tạo thư mục
     makedirs(folder, exist_ok=True)
+
+    #tiến hành xử lý
     for index, link in enumerate(img_links):
         print(link)
         file = join(folder,f"image_{index}.jpg")
